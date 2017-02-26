@@ -1,160 +1,219 @@
-import pandas
-import math
+###   Scripted by Mohammed Jasam   ###
 
-with open("data.csv", 'r') as csvfile:
-    data = pandas.read_csv(csvfile)
-
-# The names of all the columns in the data.
-# print(data.columns.values)
-
-# Select Lebron James from our dataset
-category = data[data["SITE"] == "technology"].iloc[0]
-
-
-# Choose only the numeric columns (we'll use these to compute euclidean distance)
-distance_columns = ['kids', 'say', 'things', 'president', 'diet', 'fitnessliving'
-, 'wellparenting', 'tv', 'search', 'crime', 'east', 'digital', 'shows', 'kelly'
-, 'wallace', 'november', 'chat', 'facebook', 'messenger', 'find', 'world', 'many'
-, 'want', 'videos', 'must', 'watch', 'run', 'according', 'large', 'family', 'life'
-, 'read', 'parents', 'twitter', 'school', 'interest', 'much', 'also', 'absolutely'
-, 'ever', 'office', 'land', 'thing', 'go', 'could', 'told', 'america', 'march'
-, 'presidential', 'campaign', 'end', 'million', 'order', 'get', 'money', 'first'
-, 'take', 'time', 'might', 'american', 'times', 'way', 'election', 'children', 'inc'
-, 'country', 'leader', 'free', 'high', 'thought', 'know', 'good', 'candidates'
-, 'definitely', 'part', 'white', 'house', 'four', 'years', 'vice', 'top', 'young'
-, 'really', 'call', 'public', 'service', 'show', 'beyond', 'vote', 'artist', 'model'
-, 'someone', 'cancer', 'helping', 'animals', 'asked', 'make', 'better', 'place'
-, 'latest', 'share', 'comments', 'health', 'hillary', 'clinton', 'female', 'even'
-, 'actually', 'chance', 'lady', 'content', 'pay', 'card', 'save', 'enough'
-, 'reverse', 'risk', 'paid', 'partner', 'cards', 'around', 'next', 'generation'
-, 'big', 'network', 'system', 'rights', 'reserved', 'terms', 'mexican', 'meeting'
-, 'trump', 'january', 'mexico', 'different', 'route', 'border', 'immigrants'
-, 'trying', 'donald', 'wall', 'billion', 'signs', 'executive', 'actions'
-, 'building', 'along', 'southern', 'nowstory', 'believe', 'fruitless', 'thursday'
-, 'set', 'week', 'plan', 'tuesday', 'something', 'recently', 'wednesday', 'needed'
-, 'tweet', 'trade', 'nafta', 'massive', '@realdonaldtrump', 'jobs', 'companies'
-, 'remarks', 'gathering', 'congressional', 'republicans', 'planned', 'together'
-, 'unless', 'senate', 'gop', 'lawmakers', 'security', 'national', 'problem'
-, 'illegal', 'immigration', 'see', 'need', 'statement', 'back', 'two', 'leaders'
-, 'last', 'year', 'days', 'called', 'action', 'begin', 'process', 'announced'
-, 'move', 'level', 'foreign', 'representatives', 'come', 'since', 'officials'
-, 'including', 'staff', 'minister', 'government', 'team', 'car', 'department'
-, 'homeland', 'work', 'help', 'united', 'states', 'forces', 'number', 'officers'
-, 'visit', 'try', 'able', 'related', 'monday', 'migrants', 'home', 'city'
-, 'conversation', 'made']
-
-def euclidean_distance(row):
-    """
-    A simple euclidean distance function
-    """
-    inner_value = 0
-    for k in distance_columns:
-        inner_value += (row[k] - category[k]) ** 2
-    return math.sqrt(inner_value)
-
-# Find the distance from each player in the dataset to lebron.
-technology_distance = data.apply(euclidean_distance, axis=1)
-
-# print(technology_distance)
-
-# Select only the numeric columns from the NBA dataset
-data_numeric = data[distance_columns]
-
-# Normalize all of the numeric columns
-data_normalized = (data_numeric - data_numeric.mean()) / data_numeric.std()
-
-
-# print(data_normalized)
-
-from scipy.spatial import distance
-
-# Fill in NA values in nba_normalized
-data_normalized.fillna(0, inplace=True)
-
-
-# Find the normalized vector for lebron james.
-technology_normalized = data_normalized[data["SITE"] == "technology1"]
-
-# print(technology_normalized)
-
-# Find the distance between lebron james and everyone else.
-euclidean_distances = data_normalized.apply(lambda row: distance.euclidean(row, technology_normalized), axis=1)
-
-# Create a new dataframe with distances.
-distance_frame = pandas.DataFrame(data={"dist": euclidean_distances, "idx": euclidean_distances.index})
-distance_frame.sort("dist", inplace=True)
-# Find the most similar player to lebron (the lowest distance to lebron is lebron, the second smallest is the most similar non-lebron player)
-second_smallest = distance_frame.iloc[1]["idx"]
-most_similar_to_technology = data.loc[int(second_smallest)]["SITE"]
-
-
-# print(most_similar_to_technology)
-
-
+import csv
 import random
-from numpy.random import permutation
+import math
+import numpy as np
+from sklearn import metrics
+import operator
+from pandas import Series, DataFrame
+import pandas as pd
+import numpy as np
+import os
+import matplotlib.pylab as plt
+from sklearn.cross_validation import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import classification_report
+import sklearn.metrics
+from sklearn.model_selection import ShuffleSplit
+from sklearn.cross_validation import StratifiedKFold
+from sklearn.model_selection import KFold
+import IPython
+from sklearn import tree
+#from StringIO import StringIO
+from io import StringIO
+#from StringIO import StringIO
+from IPython.display import Image
+import time
+import numpy as np
+import matplotlib.pyplot as plt
+import sys
+from PyPDF2 import PdfFileMerger
+import os
+import subprocess
 
-# Randomly shuffle the index of nba.
-random_indices = permutation(data.index)
-# Set a cutoff for how many items we want in the test set (in this case 1/3 of the items)
-test_cutoff = math.floor(len(data)/3)
-# Generate the test set by taking the first 1/3 of the randomly shuffled indices.
-test = data.loc[random_indices[1:test_cutoff]]
-# Generate the train set with the rest of the data.
-train = data.loc[random_indices[test_cutoff:]]
+
+count=1
+l=[]
+def colCount(filename):
+    datafilename = 'data.csv'
+    d = ','
+    f=open(datafilename,'r')
+
+    reader=csv.reader(f,delimiter=d)
+    ncol=len(next(reader)) # Read first line and count columns
+    f.seek(0)              # go back to beginning of file
+    for row in reader:
+        pass
+    return(ncol)
+
+def loadDataset(filename, split, trainingSet=[] , testSet=[]):
+        with open(filename, 'r') as csvfile:
+            lines = csv.reader(csvfile)
+            next(lines)
+            dataset = list(lines)
+            cols=colCount('data.csv')
+            # 5 Fold Cross Validation!!!
+            i=0
+            if count==1:
+                for x in range(len(dataset)-1):
+                    i+=1
+                    for y in range(cols):
+                        dataset[x][y] = float(dataset[x][y])
+                    if 20<=i<100 :
+                        trainingSet.append(dataset[x])
+                    else:
+                        testSet.append(dataset[x])
+                        # print(i)
+            elif count==2:
+                for x in range(len(dataset)-1):
+                    i+=1
+                    for y in range(cols):
+                        dataset[x][y] = float(dataset[x][y])
+                    if 0<=i<20:
+                        trainingSet.append(dataset[x])
+                    elif 40<=i<100 :
+                        trainingSet.append(dataset[x])
+                    else:
+                        testSet.append(dataset[x])
+                        # print(i)
+            elif count==3:
+                for x in range(len(dataset)-1):
+                    i+=1
+                    for y in range(cols):
+                        dataset[x][y] = float(dataset[x][y])
+                    if 0<=i<40:
+                        trainingSet.append(dataset[x])
+                    elif 60<=i<100 :
+                        trainingSet.append(dataset[x])
+                    else:
+                        testSet.append(dataset[x])
+                        # print(i)
+            elif count==4:
+                for x in range(len(dataset)-1):
+                    i+=1
+                    for y in range(cols):
+                        dataset[x][y] = float(dataset[x][y])
+                    if 0<=i<60:
+                        trainingSet.append(dataset[x])
+                    elif 80<=i<100 :
+                        trainingSet.append(dataset[x])
+                    else:
+                        testSet.append(dataset[x])
+                        # print(i)
+            else:
+                for x in range(len(dataset)-1):
+                    i+=1
+                    for y in range(cols):
+                        dataset[x][y] = float(dataset[x][y])
+                    if 0<=i<80:
+                        trainingSet.append(dataset[x])
+                    else:
+                        testSet.append(dataset[x])
+                        # print(i)
 
 
-# The columns that we will be making predictions with.
-x_columns = ['kids', 'say', 'things', 'president', 'diet', 'fitnessliving'
-, 'wellparenting', 'tv', 'search', 'crime', 'east', 'digital', 'shows', 'kelly'
-, 'wallace', 'november', 'chat', 'facebook', 'messenger', 'find', 'world', 'many'
-, 'want', 'videos', 'must', 'watch', 'run', 'according', 'large', 'family', 'life'
-, 'read', 'parents', 'twitter', 'school', 'interest', 'much', 'also', 'absolutely'
-, 'ever', 'office', 'land', 'thing', 'go', 'could', 'told', 'america', 'march'
-, 'presidential', 'campaign', 'end', 'million', 'order', 'get', 'money', 'first'
-, 'take', 'time', 'might', 'american', 'times', 'way', 'election', 'children', 'inc'
-, 'country', 'leader', 'free', 'high', 'thought', 'know', 'good', 'candidates'
-, 'definitely', 'part', 'white', 'house', 'four', 'years', 'vice', 'top', 'young'
-, 'really', 'call', 'public', 'service', 'show', 'beyond', 'vote', 'artist', 'model'
-, 'someone', 'cancer', 'helping', 'animals', 'asked', 'make', 'better', 'place'
-, 'latest', 'share', 'comments', 'health', 'hillary', 'clinton', 'female', 'even'
-, 'actually', 'chance', 'lady', 'content', 'pay', 'card', 'save', 'enough'
-, 'reverse', 'risk', 'paid', 'partner', 'cards', 'around', 'next', 'generation'
-, 'big', 'network', 'system', 'rights', 'reserved', 'terms', 'mexican', 'meeting'
-, 'trump', 'january', 'mexico', 'different', 'route', 'border', 'immigrants'
-, 'trying', 'donald', 'wall', 'billion', 'signs', 'executive', 'actions'
-, 'building', 'along', 'southern', 'nowstory', 'believe', 'fruitless', 'thursday'
-, 'set', 'week', 'plan', 'tuesday', 'something', 'recently', 'wednesday', 'needed'
-, 'tweet', 'trade', 'nafta', 'massive', '@realdonaldtrump', 'jobs', 'companies'
-, 'remarks', 'gathering', 'congressional', 'republicans', 'planned', 'together'
-, 'unless', 'senate', 'gop', 'lawmakers', 'security', 'national', 'problem'
-, 'illegal', 'immigration', 'see', 'need', 'statement', 'back', 'two', 'leaders'
-, 'last', 'year', 'days', 'called', 'action', 'begin', 'process', 'announced'
-, 'move', 'level', 'foreign', 'representatives', 'come', 'since', 'officials'
-, 'including', 'staff', 'minister', 'government', 'team', 'car', 'department'
-, 'homeland', 'work', 'help', 'united', 'states', 'forces', 'number', 'officers'
-, 'visit', 'try', 'able', 'related', 'monday', 'migrants', 'home', 'city'
-, 'conversation', 'made']
-# The column that we want to predict.
-y_column = ["facebook"]
+def euclideanDistance(instance1, instance2, length):
+        distance = 0
+        for x in range(length):
+                distance += pow((instance1[x] - instance2[x]), 2)
+        return math.sqrt(distance)
 
-from sklearn.neighbors import KNeighborsRegressor
-# Create the knn model.
-# Look at the five closest neighbors.
-knn = KNeighborsRegressor(n_neighbors=5)
-# print(knn)
+def getNeighbors(trainingSet, testInstance, k):
+        distances = []
+        length = len(testInstance)-1
+        for x in range(len(trainingSet)):
+                dist = euclideanDistance(testInstance, trainingSet[x], length)
+                distances.append((trainingSet[x], dist))
+        distances.sort(key=operator.itemgetter(1))
+        neighbors = []
+        for x in range(k):
+                neighbors.append(distances[x][0])
+        return neighbors
 
-# Fit the model on the training data.
-knn.fit(train[x_columns], train[y_column])
-# Make point predictions on the test set using the fit model.
-predictions = knn.predict(test[x_columns])
+def getResponse(neighbors):
+        classVotes = {}
+        for x in range(len(neighbors)):
+                response = neighbors[x][-1]
+                if response in classVotes:
+                        classVotes[response] += 1
+                else:
+                        classVotes[response] = 1
+        sortedVotes = sorted(classVotes.items(), key=operator.itemgetter(1), reverse=True)
+        return sortedVotes[0][0]
 
-# print(predictions)
+def getAccuracy(testSet, predictions):
+        correct = 0
+        for x in range(len(testSet)):
+                if testSet[x][-1] == predictions[x]:
+                        correct += 1
+        return (correct/float(len(testSet))) * 100.0
 
-# Get the actual values for the test set.
-actual = test[y_column]
+def main():
+        # prepare data
+        trainingSet=[]
+        testSet=[]
+        split = 0.78
+        loadDataset('data.csv', split, trainingSet, testSet)
+        print ('Train set: ' + repr(len(trainingSet)))
+        print ( 'Test set: ' + repr(len(testSet)))
+        # generate predictions
+        predictions=[]
+        k = 3
+        for x in range(len(testSet)):
+                neighbors = getNeighbors(trainingSet, testSet[x], k)
+                result = getResponse(neighbors)
+                predictions.append(result)
+                print('> predicted=' + repr(result) + ', actual=' + repr(testSet[x][-1]))
+        pre=[]
+        act=[]
+        for x in range(len(testSet)):
+            neighbors = getNeighbors(trainingSet, testSet[x], k)
+            result = getResponse(neighbors)
+            predictions.append(result)
+            pre.append(repr(result))
+            act.append(repr(testSet[x][-1]))
+        # print(pre)
+        pre = [float(i) for i in pre]
+        pre = [int(i) for i in pre]
+        # print(pre)
+        act = [float(i) for i in act]
+        act = [int(i) for i in act]
+        # print(act)
+        # print(pre)
+        predict = np.array([pre])
+        expect = np.array([act])
 
-# Compute the mean squared error of our predictions.
-mse = (((predictions - actual) ** 2).sum()) / len(predictions)
+        # print(predict)
+        # smp_report = metrics.precision_recall_fscore_support(predict, expect, beta=1, average = 'samples')
+        # f_report = metrics.f1_score(expect, predict, average = 'samples')
 
-print(mse)
+        # print(f_report, smp_report)
+
+
+        # nums = [int(x) for x in pre]
+        # e = list(map(int, pre))
+        # print(act)
+        accuracy = getAccuracy(testSet, predictions)
+        l.append(accuracy)
+        print('Accuracy: ' + repr(accuracy) + '%')
+
+for x in range(5):
+    main()
+    count+=1
+l=[int(x) for x in l]
+with open("KNN_Accuracy.csv", "w") as fp_out:
+    writer = csv.writer(fp_out, delimiter=",")
+    writer.writerow(l)
+# print(l)
+a=0
+for i in range(len(l)):
+    a+=l[i]
+# print(a)
+print('The average accuracy after 5 Fold Cross Validation is '+str(a/len(l))+'%')
+objects=('Fold 1','Fold 2','Fold 3','Fold 4','Fold 5')
+y_pos = np.arange(len(objects))
+plt.bar(y_pos, l)
+plt.show()
+
+sys.exit()
