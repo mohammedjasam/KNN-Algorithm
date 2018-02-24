@@ -17,8 +17,8 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 df = pd.read_csv("data.csv", encoding = "ISO-8859-1")
 scaler = StandardScaler()
-scaler.fit(df.drop('SITE', axis = 1))
-scaled_features = scaler.transform(df.drop('SITE', axis = 1))
+scaler.fit(df.drop('mainCATEGORIES', axis = 1))
+scaled_features = scaler.transform(df.drop('mainCATEGORIES', axis = 1))
 df_feat = pd.DataFrame(scaled_features, columns = df.columns[:-1])
 accuracy_list = []
 kf = KFold(n_splits=5)
@@ -26,36 +26,45 @@ test=[]
 train=[]
 def getValues(count):
     if count==1:
-        for i in range(100):
-            if 0<=i<20:
+        for i in range(18828):
+            if 0<=i<3765:
                 test.append(i)
             else:
                 train.append(i)
+        print("phase 1")
 
     if count==2:
-        for i in range(100):
-            if 20<=i<40:
+        for i in range(18828):
+            if 3765<=i<7530:
                 test.append(i)
             else:
                 train.append(i)
+        print("phase 2")
+
     if count==3:
-        for i in range(100):
-            if 40<=i<60:
+        for i in range(18828):
+            if 7530<=i<11295:
                 test.append(i)
             else:
                 train.append(i)
+        print("phase 3")
+
     if count==4:
-        for i in range(100):
-            if 60<=i<80:
+        for i in range(18828):
+            if 11296<=i<15060:
                 test.append(i)
             else:
                 train.append(i)
+        print("phase 4")
+
     if count==5:
-        for i in range(100):
-            if 80<=i<100:
+        for i in range(18828):
+            if 15060<=i<18828:
                 test.append(i)
             else:
                 train.append(i)
+        print("phase 5")
+
     return test,train
 print('\n')
 km=[]
@@ -64,9 +73,9 @@ for x in range(5):
     train=[]
     test,train=getValues(x+1)
     pred_train = df_feat.ix[train]
-    tar_train = df['SITE'][train]
+    tar_train = df['mainCATEGORIES'][train]
     pred_test = df_feat.ix[test]
-    tar_test = df['SITE'][test]
+    tar_test = df['mainCATEGORIES'][test]
 
     # Finding the best value of K with minimum error rate for each fold!!
     error_rate = []
@@ -92,9 +101,9 @@ for x in range(5):
     train=[]
     test,train=getValues(x+1)
     pred_train = df_feat.ix[train]
-    tar_train = df['SITE'][train]
+    tar_train = df['mainCATEGORIES'][train]
     pred_test = df_feat.ix[test]
-    tar_test = df['SITE'][test]
+    tar_test = df['mainCATEGORIES'][test]
     # Using the minimum K value to run the algorithm!
     knn = KNeighborsClassifier(n_neighbors = k)
     knn.fit(pred_train, tar_train)
